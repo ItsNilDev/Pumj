@@ -54,7 +54,7 @@ struct Floor {
 	 float upside = y - outline_thickness;
 
 	 Floor() {
-		  rect.setSize(sf::Vector2f{4000, 30});
+		  rect.setSize(sf::Vector2f{6000, 30});
 		  rect.setPosition(x, y);
 		  rect.setFillColor(sf::Color(252,163,17));
 		  rect.setOutlineColor(sf::Color(20,33,61));
@@ -85,6 +85,10 @@ struct Obstacle {
 	 }
 };
 
+bool iscollied(const Player& p, const Obstacle& o) {
+	 return p.rect.getGlobalBounds().intersects(o.trian.getGlobalBounds());
+}
+
 int main() {
 	 sf::RenderWindow window(sf::VideoMode(SCREEN_WIDTH, SCREEN_HEIGHT), "Pumj");
 	 window.setFramerateLimit(60);
@@ -109,6 +113,8 @@ int main() {
 	 Floor floor;
 
 	 Obstacle obstacle(1600, floor.upside);
+	 Obstacle obstacle2(2000, floor.upside);
+	 Obstacle obstacle3(2200, floor.upside);
 
 	 while (window.isOpen()) {
 		  sf::Event event;
@@ -122,12 +128,14 @@ int main() {
 			   window.draw(background);
 			   window.draw(player.rect);
 			   window.draw(obstacle.trian);
+			   window.draw(obstacle2.trian);
+			   window.draw(obstacle3.trian);
 
 			   view.setCenter(sf::Vector2f(player.GetxPosition() + 300, 500));
 			   player.rect.setPosition(player.x, player.y);
 
 			   // Player-Floor Collision detection /////////////////////////////////////////////////////////
-			   if(player.y + player.height >= floor.upside) {
+			   if(player.rect.getGlobalBounds().intersects(floor.rect.getGlobalBounds())) {
 					player.y = floor.upside - player.height;
 					player.vertical_speed = 0;
 					player.on_ground = true;
@@ -136,12 +144,12 @@ int main() {
 					player.y += player.vertical_speed;
 			   }
 
-			   // TODO: Player-Obstacle Collision detection
-			   // spdlog::info("player: {}", player.y);
-			   // spdlog::info(obstacle.y);
-			   // if(player.GetmiddlePosition() == obstacle.) {
-			   // gameover = true;
-		  // }
+			   // Player-Obstacle Collision detection /////////////////////////////////////////////////////////
+			   if(iscollied(player, obstacle)
+				  || iscollied(player, obstacle2)
+				  || iscollied(player, obstacle3)) {
+					gameover = true;
+				  }
 
 			   // Jump Setup /////////////////////////////////////////////////////////
 			   if(sf::Keyboard::isKeyPressed(sf::Keyboard::U) && player.on_ground) {
