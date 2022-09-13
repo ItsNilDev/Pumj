@@ -23,27 +23,23 @@ const float GRAVITY_SPEED = 1.5;
 
 
 struct Player {
-	 sf::RectangleShape rect;
+	 sf::RectangleShape body;
 	 float width = 50;
 	 float height = 50;
 	 float x = PLAYER_START_POSITION_X;
 	 float y = PLAYER_START_POSITION_Y;
+	 float horizontal_speed = 10;
 	 float vertical_speed = 0;
 	 bool on_ground = false;
 
 	 float GetxPosition() {
-		  return rect.getPosition().x;
-	 }
-
-	 sf::Vector2f GetmiddlePosition() {
-		  return sf::Vector2f(x + width/2, y + height/2);
+		  return body.getPosition().x;
 	 }
 
 	 Player() {
-		  // sf::RectangleShape rect(sf::Vector2f{50,50});
-		  rect.setSize(sf::Vector2f{width, height});
-		  rect.setPosition(x, y);
-		  rect.setFillColor(sf::Color(255,89,94));
+		  body.setSize(sf::Vector2f{width, height});
+		  body.setPosition(x, y);
+		  body.setFillColor(sf::Color(255,89,94));
 	 }
 };
 
@@ -65,24 +61,52 @@ struct Floor {
 };
 
 struct Obstacle {
-	 sf::CircleShape trian;
+	 sf::CircleShape body;
 	 float x = 0;
 	 float y = 0;
 	 float height = 40;
 	 float upside = 0;
 	 float width = 50;
-	 float height2 = 50;
-	 sf::Vector2f GetmiddlePosition() {
-		  return sf::Vector2f(x + width/2, y + height2/2 - 50);
-	 }
 
 	 Obstacle(float x, float y) {
 		  this->x = x;
 		  this->y = y;
-		  upside = y - height2;
-		  trian.setPointCount(3);
-		  trian.setRadius(height);
-		  trian.setPosition(x, upside);
+		  upside = y - height;
+		  body.setPointCount(3);
+		  body.setRadius(height);
+		  body.setPosition(x, upside);
+	 }
+};
+
+enum Spells {
+	 SLOW = 0,
+	 FAST
+};
+
+struct Spell {
+	 sf::CircleShape body;
+	 Spells type;
+	 float x = 0;
+	 float y = 0;
+	 float height = 20;
+	 float upside = 0;
+	 bool collected = false;
+	 Spell(float x, float y, Spells type) {
+		  this->x = x;
+		  this->y = y;
+		  this->type = type;
+		  upside = y - 50;
+		  switch(type) {
+		  case Spells::FAST:
+			   body.setFillColor(sf::Color::Green);
+			   break;
+		  case Spells::SLOW:
+			   body.setFillColor(sf::Color::Cyan);
+			   break;
+		  }
+		  body.setPointCount(100.0f);
+		  body.setRadius(height);
+		  body.setPosition(x, upside);
 	 }
 };
 
@@ -93,13 +117,6 @@ bool isCollied(const sf::Shape& p, const sf::Shape& o) {
 int main() {
 	 sf::RenderWindow window(sf::VideoMode(SCREEN_WIDTH, SCREEN_HEIGHT), "Pumj");
 	 window.setFramerateLimit(60);
-	 // sf::Image map;
-	 // map.loadFromFile("assets/map.png");
-	 sf::Texture texture;
-	 texture.loadFromFile("assets/background.png");
-	 sf::Sprite background;
-	 background.setTexture(texture);
-	 background.setScale(sf::Vector2f{1.6, 1.2});
 	 sf::Font font;
 	 font.loadFromFile("assets/z.ttf");
 	 bool gameover = false;
@@ -113,9 +130,11 @@ int main() {
 	 // floor
 	 Floor floor;
 
-	 Obstacle obstacle(1600, floor.upside);
-	 Obstacle obstacle2(2000, floor.upside);
-	 Obstacle obstacle3(2200, floor.upside);
+	 Obstacle obstacle(2000, floor.upside);
+	 Obstacle obstacle2(2400, floor.upside);
+	 Obstacle obstacle3(2600, floor.upside);
+
+	 Spell spell1(1400, floor.upside, Spells::FAST);
 
 	 while (window.isOpen()) {
 		  sf::Event event;
@@ -124,19 +143,21 @@ int main() {
 					window.close();
 		  }
 		  if(!gameover) {
-			   window.clear();
+			   window.clear(sf::Color(20, 20, 20));
 			   window.setView(view);
-			   window.draw(background);
-			   window.draw(player.rect);
-			   window.draw(obstacle.trian);
-			   window.draw(obstacle2.trian);
-			   window.draw(obstacle3.trian);
+			   window.draw(player.body);
+			   window.draw(obstacle.body);
+			   window.draw(obstacle2.body);
+			   window.draw(obstacle3.body);
+			   if(!spell1.collected) {
+					window.draw(spell1.body);
+			   }
 
 			   view.setCenter(sf::Vector2f(player.GetxPosition() + 300, 500));
-			   player.rect.setPosition(player.x, player.y);
+			   player.body.setPosition(player.x, player.y);
 
 			   // Player-Floor Collision detection /////////////////////////////////////////////////////////
-			   if(isCollied(player.rect, floor.rect)) {
+			   if(isCollied(player.body, floor.rect)) {
 					player.y = floor.upside - player.height;
 					player.vertical_speed = 0;
 					player.on_ground = true;
@@ -146,11 +167,17 @@ int main() {
 			   }
 
 			   // Player-Obstacle Collision detection /////////////////////////////////////////////////////////
-			   if(isCollied(player.rect, obstacle.trian)
-				  || isCollied(player.rect, obstacle2.trian)
-				  || isCollied(player.rect, obstacle3.trian)) {
+			   if(isCollied(player.body, obstacle.body)
+				  || isCollied(player.body, obstacle2.body)
+				  || isCollied(player.body, obstacle3.body)) {
 					gameover = true;
-				  }
+			   }
+
+			   // Player-Spell Collision //////////////////////////////////////////////
+			   if(isCollied(player.body, spell1.body) && true == !spell1.collected) {
+					player.horizontal_speed += 5;
+					spell1.collected = true;
+			   }
 
 			   // Jump Setup /////////////////////////////////////////////////////////
 			   if(sf::Keyboard::isKeyPressed(sf::Keyboard::U) && player.on_ground) {
@@ -160,21 +187,29 @@ int main() {
 			   }
 
 			   // moving player at a constant rate in x-axis /////////////////////////////////////////////////////////
-			   player.x += 10;
+			   player.x += player.horizontal_speed;
+
+			   // Player Falling Detection  ////////////////////////////////////////////////////
+			   if(player.y >= 800) {
+					gameover = true;
+			   }
 
 			   window.draw(floor.rect);
 			   window.display();
 		  } else {
+			   // Game Over Handle
 			   window.clear();
 			   window.setView(window.getDefaultView());
 			   sf::Text gameover_text("Game Over", font, 150);
 			   gameover_text.setPosition(SCREEN_WIDTH/2 - 250, SCREEN_HEIGHT/2);
 			   gameover_text.setFillColor(sf::Color::Red);
+			   player.x = PLAYER_START_POSITION_X;
+			   player.y = PLAYER_START_POSITION_Y;
+			   player.horizontal_speed = 10;
+			   spell1.collected = false;
 			   window.draw(gameover_text);
 			   window.display();
 			   if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {
-					player.x = PLAYER_START_POSITION_X;
-					player.y = PLAYER_START_POSITION_Y;
 					gameover = false;
 			   }
 		  }
