@@ -4,6 +4,7 @@
 #include <SFML/Graphics/Font.hpp>
 #include <SFML/Graphics/Image.hpp>
 #include <SFML/Graphics/RectangleShape.hpp>
+#include <SFML/Graphics/RenderStates.hpp>
 #include <SFML/Graphics/Sprite.hpp>
 #include <SFML/Graphics/Text.hpp>
 #include <SFML/Graphics/Texture.hpp>
@@ -85,8 +86,8 @@ struct Obstacle {
 	 }
 };
 
-bool iscollied(const Player& p, const Obstacle& o) {
-	 return p.rect.getGlobalBounds().intersects(o.trian.getGlobalBounds());
+bool isCollied(const sf::Shape& p, const sf::Shape& o) {
+	 return p.getGlobalBounds().intersects(o.getGlobalBounds());
 }
 
 int main() {
@@ -135,7 +136,7 @@ int main() {
 			   player.rect.setPosition(player.x, player.y);
 
 			   // Player-Floor Collision detection /////////////////////////////////////////////////////////
-			   if(player.rect.getGlobalBounds().intersects(floor.rect.getGlobalBounds())) {
+			   if(isCollied(player.rect, floor.rect)) {
 					player.y = floor.upside - player.height;
 					player.vertical_speed = 0;
 					player.on_ground = true;
@@ -145,9 +146,9 @@ int main() {
 			   }
 
 			   // Player-Obstacle Collision detection /////////////////////////////////////////////////////////
-			   if(iscollied(player, obstacle)
-				  || iscollied(player, obstacle2)
-				  || iscollied(player, obstacle3)) {
+			   if(isCollied(player.rect, obstacle.trian)
+				  || isCollied(player.rect, obstacle2.trian)
+				  || isCollied(player.rect, obstacle3.trian)) {
 					gameover = true;
 				  }
 
