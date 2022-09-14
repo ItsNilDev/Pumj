@@ -2,13 +2,11 @@
 #include <SFML/Graphics/CircleShape.hpp>
 #include <SFML/Graphics/Color.hpp>
 #include <SFML/Graphics/Font.hpp>
-#include <SFML/Graphics/RenderStates.hpp>
 #include <SFML/Graphics/Text.hpp>
 #include <SFML/Graphics/View.hpp>
 #include <SFML/System/Vector2.hpp>
 #include <SFML/Window/Keyboard.hpp>
 #include <iostream>
-#include <spdlog/spdlog.h>
 #include "Player.cpp"
 #include "constants.h"
 #include "Floor.cpp"
